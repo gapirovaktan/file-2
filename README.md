@@ -1,95 +1,82 @@
-#include using namespace std;
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <queue>
 
-double multiply(double a, double b) {
-return a * b;
+using namespace std;
+
+struct Node {
+    char data;
+    int freq;
+    Node* left;
+    Node* right;
+
+    Node(char data, int freq) : data(data), freq(freq), left(nullptr), right(nullptr) {}
+};
+
+struct Compare {
+    bool operator()(Node* left, Node* right) {
+        return left->freq > right->freq;
+    }
+};
+
+Node* buildHuffmanTree(const string& text) {
+    unordered_map<char, int> freqMap;
+    for (char c : text) {
+        freqMap[c]++;
+    }
+
+    priority_queue<Node*, vector<Node*>, Compare> pq;
+    for (const auto& pair : freqMap) {
+        pq.push(new Node(pair.first, pair.second));
+    }
+
+    while (pq.size() > 1) {
+        Node* left = pq.top();
+        pq.pop();
+        Node* right = pq.top();
+        pq.pop();
+
+        Node* parent = new Node('$', left->freq + right->freq);
+        parent->left = left;
+        parent->right = right;
+        pq.push(parent);
+    }
+
+    return pq.top();
 }
 
-double divide(double a, double b) {
-if (b == 0) {
-cout << "Error: Division by zero!" << endl;
-return 0;
-}
-return a / b;
+void encode(Node* root, string str, unordered_map<char, string>& huffmanCode) {
+    if (root == nullptr) {
+        return;
+    }
+
+    if (!root->left && !root->right) {
+        huffmanCode[root->data] = str;
+    }
+
+    encode(root->left, str + "0", huffmanCode);
+    encode(root->right, str + "1", huffmanCode);
 }
 
-double add(double a, double b) {
-return a + b;
-}
+string huffmanEncode(const string& text) {
+    Node* root = buildHuffmanTree(text);
 
-double subtract(double a, double b) {
-return a - b;
-}
+    unordered_map<char, string> huffmanCode;
+    encode(root, "", huffmanCode);
 
-double squareRoot(double a) {
-if (a < 0) {
-cout << "Error: Cannot compute square root of a negative number!" << endl;
-return 0;
-}
-return sqrt(a);
-}
+    string encodedText = "";
+    for (char c : text) {
+        encodedText += huffmanCode[c];
+    }
 
-double absoluteValue(double a) {
-return abs(a);
-}
-
-double powerNum(double a, double b) {
-return pow(a, b);
+    return encodedText;
 }
 
 int main() {
-double num1, num2;
-char op;
-string input;
-vector total;
+    string text = "Jenishbek Agay";
+    string encodedText = huffmanEncode(text);
+    cout << "Encoded text: " << encodedText << endl;
 
-cout << "Welcome to the Calculator!" << endl;
-do {
-if (input == "h") {
-cout << "History of calculations:" << endl;
-for (const string& calc : total) {
-cout << calc << endl;
-}
-}
-cout << "Enter arithmetic expression: ";
-getline(cin, input);
-
-total.push_back(input);
-
-istringstream iss(input);
-iss >> num1;
-
-while (iss >> op >> num2) {
-switch (op) {
-case '+':
-num1 = add(num1, num2);
-break;
-case '-':
-num1 = subtract(num1, num2);
-break;
-case '*':
-num1 = multiply(num1, num2);
-break;
-case '/':
-num1 = divide(num1, num2);
-break;
-case '^':
-num1 = powerNum(num1, num2);
-break;
-case '#':
-num1 = squareRoot(num1);
-break;
-default:
-cout << "Error: Invalid operator '" << op << "'" << endl;
-}
-}
-total.push_back(input + " = " + to_string(num1));
-cout << "Result: " << num1 << endl;
-
-cout << "Do you want to continue (Y/N/H)? ";
-getline(cin, input);
-} while (input == "Y"  input == "y"  input == "h");
-
-cout << "Thank you for using the Calculator!" << endl;
-
-return 0;
+    return 0;
 }
